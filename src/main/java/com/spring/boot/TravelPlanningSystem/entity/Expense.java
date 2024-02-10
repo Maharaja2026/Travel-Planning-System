@@ -28,5 +28,4 @@ public class Expense
 	
 	@ManyToOne(cascade = CascadeType.ALL)
 	private Trip trip;
-
 }
