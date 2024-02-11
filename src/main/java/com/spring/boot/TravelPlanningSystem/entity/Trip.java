@@ -28,7 +28,7 @@ public class Trip
 	private LocalDate startDate;
 	private LocalDate endDate;
 	private TransportationMode transportationMode;
-	private AccomaodationType accomaodationType;
+	private AccommodationType accommodationType;
 	
 	@ManyToOne(cascade = CascadeType.ALL)
 	private User user;

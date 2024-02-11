@@ -28,7 +28,4 @@ public class User
 	
 	@OneToMany(cascade = CascadeType.ALL)
 	private List<Trip> trips;
-	
-//	private TransportationMode transportationMode;
-//	private AccomaodationType accomaodationType;
 }

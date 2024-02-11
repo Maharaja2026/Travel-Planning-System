@@ -26,5 +26,5 @@ public class DestinationReview
 	
 	@ManyToOne(cascade = CascadeType.ALL)
 	private Trip trip;
-
+	
 }

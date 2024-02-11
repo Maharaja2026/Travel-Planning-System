@@ -1,5 +1,6 @@
 package com.spring.boot.TravelPlanningSystem.service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,7 +9,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.spring.boot.TravelPlanningSystem.dao.ItineraryItemDao;
+import com.spring.boot.TravelPlanningSystem.dao.TripDao;
 import com.spring.boot.TravelPlanningSystem.entity.ItineraryItem;
+import com.spring.boot.TravelPlanningSystem.entity.Trip;
 import com.spring.boot.TravelPlanningSystem.util.ResponseStructure;
 
 @Service
@@ -17,13 +20,26 @@ public class ItineraryItemService
 	@Autowired
 	ItineraryItemDao dao;
 	
-	public ResponseEntity<ResponseStructure<ItineraryItem>> saveItineraryItem(ItineraryItem itineraryItem)
+	@Autowired
+	TripDao tdao;
+	
+	public ResponseEntity<ResponseStructure<ItineraryItem>> saveItineraryItem(int tripId,ItineraryItem itineraryItem)
 	{
-		ResponseStructure<ItineraryItem> structure = new ResponseStructure<>();
-		structure.setMessage("ItineraryItem save success..!");
-		structure.setStatus(HttpStatus.CREATED.value());
-		structure.setData(dao.saveItineraryItem(itineraryItem));
-		return new ResponseEntity<ResponseStructure<ItineraryItem>>(structure,HttpStatus.CREATED);
+		Trip trip = tdao.findTrip(tripId);
+		if(trip != null)
+		{
+			List<ItineraryItem> tripItineraryItems = findAllItineraryItemsByTrip(tripId);
+//			trip.getItineraryItems().add(itineraryItem);
+			trip.setItineraryItems(tripItineraryItems);
+			tdao.updateTrip(trip, tripId);
+			itineraryItem.setTrip(trip);
+			ResponseStructure<ItineraryItem> structure = new ResponseStructure<>();
+			structure.setMessage("ItineraryItem save success..!");
+			structure.setStatus(HttpStatus.CREATED.value());
+			structure.setData(dao.saveItineraryItem(itineraryItem));
+			return new ResponseEntity<ResponseStructure<ItineraryItem>>(structure,HttpStatus.CREATED);
+		}
+		return null; //trip does not exist
 	}
 	
 	public ResponseEntity<ResponseStructure<ItineraryItem>> findItineraryItem(int itineraryItemId)
@@ -68,6 +84,7 @@ public class ItineraryItemService
 		return null;
 	}
 	
+	//find all Itineraryitems
 	public ResponseEntity<ResponseStructure<List<ItineraryItem>>> findALlItineraryItems()
 	{
 		List<ItineraryItem> itineraryItems = dao.findAllItineraryItems();
@@ -77,6 +94,27 @@ public class ItineraryItemService
 		structure.setData(itineraryItems);
 		return new ResponseEntity<ResponseStructure<List<ItineraryItem>>>(structure,HttpStatus.FOUND);
 	}
+	
+	//find all Itineraryitems by trip
+	public List<ItineraryItem> findAllItineraryItemsByTrip(int tripId)
+	{
+		List<ItineraryItem> allItineraryItems = dao.findAllItineraryItems();
+		List<ItineraryItem> tripItineraryItems = new ArrayList<>();
+		for(ItineraryItem itineraryItem : allItineraryItems)
+		{
+			if(itineraryItem.getTrip() != null)
+			{
+				if(itineraryItem.getTrip().equals(tdao.findTrip(tripId)))
+				{
+					tripItineraryItems.add(itineraryItem);
+				}
+			}
+			else
+				return null;
+		}
+		return tripItineraryItems;	
+	}
+	
 	
 }
 

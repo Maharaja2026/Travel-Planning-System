@@ -25,9 +25,9 @@ public class TripController
 	TripService service;
 
 	@PostMapping
-	public ResponseEntity<ResponseStructure<Trip>> saveTrip(@RequestBody Trip trip)
+	public ResponseEntity<ResponseStructure<Trip>> saveTrip(@RequestParam int userId,@RequestBody Trip trip,@RequestParam int transportValue,@RequestParam int value)
 	{
-		return service.saveTrip(trip);
+		return service.saveTrip(userId, trip, transportValue, value);
 	}
 	
 	@GetMapping

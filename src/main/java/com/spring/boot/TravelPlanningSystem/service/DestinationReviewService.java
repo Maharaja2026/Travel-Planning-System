@@ -1,5 +1,6 @@
 package com.spring.boot.TravelPlanningSystem.service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,7 +9,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.spring.boot.TravelPlanningSystem.dao.DestinationReviewDao;
+import com.spring.boot.TravelPlanningSystem.dao.TripDao;
 import com.spring.boot.TravelPlanningSystem.entity.DestinationReview;
+import com.spring.boot.TravelPlanningSystem.entity.Trip;
 import com.spring.boot.TravelPlanningSystem.util.ResponseStructure;
 
 @Service
@@ -16,14 +19,29 @@ public class DestinationReviewService
 {
 	@Autowired
 	DestinationReviewDao dao;
+	
+	@Autowired
+	TripDao tdao;
 
-	public ResponseEntity<ResponseStructure<DestinationReview>> saveDestinationReview(DestinationReview destinationReview)
+	public ResponseEntity<ResponseStructure<DestinationReview>> saveDestinationReview(int tripId,DestinationReview destinationReview)
 	{
-		ResponseStructure<DestinationReview> structure = new ResponseStructure<>();
-		structure.setMessage("DestinationReview save success..!");
-		structure.setStatus(HttpStatus.CREATED.value());
-		structure.setData(dao.saveDestinationReview(destinationReview));
-		return new ResponseEntity<ResponseStructure<DestinationReview>>(structure,HttpStatus.CREATED);
+		Trip trip = tdao.findTrip(tripId);
+		if(trip != null)
+		{
+			destinationReview.setTrip(trip);
+			List<DestinationReview> tripReviews = findAllReviewsByTrip(tripId);
+			trip.getDestinationReviews().add(destinationReview);
+			trip.setDestinationReviews(tripReviews);
+			tdao.updateTrip(trip, trip.getTripId());
+			destinationReview.setTrip(trip);
+			ResponseStructure<DestinationReview> structure = new ResponseStructure<>();
+			structure.setMessage("DestinationReview save success..!");
+			structure.setStatus(HttpStatus.CREATED.value());
+			structure.setData(dao.saveDestinationReview(destinationReview));
+			return new ResponseEntity<ResponseStructure<DestinationReview>>(structure,HttpStatus.CREATED);
+		}
+		return null;
+		
 	}
 	
 	public ResponseEntity<ResponseStructure<DestinationReview>> findDestinationReview(int destinationReviewId)
@@ -78,4 +96,17 @@ public class DestinationReviewService
 		return new ResponseEntity<ResponseStructure<List<DestinationReview>>>(structure,HttpStatus.FOUND);
 	}
 	
+	public List<DestinationReview> findAllReviewsByTrip(int tripId)
+	{
+		List<DestinationReview> allReviews = dao.findAllDestinationReviews();
+		List<DestinationReview> tripReviews = new ArrayList<>();
+		for(DestinationReview review : allReviews)
+		{
+			if(review.getTrip().equals(tdao.findTrip(tripId)))
+			{
+				tripReviews.add(review);
+			}
+		}
+		return tripReviews;
+	}
 }

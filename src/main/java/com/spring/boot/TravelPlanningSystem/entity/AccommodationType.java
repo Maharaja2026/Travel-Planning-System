@@ -1,6 +1,6 @@
 package com.spring.boot.TravelPlanningSystem.entity;
 
-public enum AccomaodationType 
+public enum AccommodationType 
 {
 	AIRBNB,
 	HOSTEL,

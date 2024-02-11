@@ -25,9 +25,9 @@ public class DestinationReviewController
 	DestinationReviewService service;
 	
 	@PostMapping
-	public ResponseEntity<ResponseStructure<DestinationReview>> saveDestinationReview(@RequestBody DestinationReview destinationReview)
+	public ResponseEntity<ResponseStructure<DestinationReview>> saveDestinationReview(@RequestParam int tripId,@RequestBody DestinationReview destinationReview)
 	{
-		return service.saveDestinationReview(destinationReview);
+		return service.saveDestinationReview(tripId, destinationReview);
 	}
 	
 	@GetMapping
