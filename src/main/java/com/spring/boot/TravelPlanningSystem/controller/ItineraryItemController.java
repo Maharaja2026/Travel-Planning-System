@@ -25,9 +25,9 @@ public class ItineraryItemController
 	ItineraryItemService service;
 
 	@PostMapping
-	public ResponseEntity<ResponseStructure<ItineraryItem>> saveItineraryItem(@RequestParam int tripId,@RequestBody ItineraryItem itineraryItem)
+	public ResponseEntity<ResponseStructure<ItineraryItem>> saveItineraryItem(@RequestBody ItineraryItem itineraryItem)
 	{
-		return service.saveItineraryItem(tripId, itineraryItem);
+		return service.saveItineraryItem(itineraryItem);
 	}
 	
 	@GetMapping

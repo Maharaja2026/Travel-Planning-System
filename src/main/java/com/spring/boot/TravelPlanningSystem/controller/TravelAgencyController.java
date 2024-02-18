@@ -53,4 +53,11 @@ public class TravelAgencyController
 	{
 		return service.findAllTravelAgencies();
 	}
+	
+	@PutMapping("assignTrip")
+	public ResponseEntity<ResponseStructure<TravelAgency>> assignTrip(@RequestParam int tripId,@RequestParam int travelAgencyId)
+	{
+		return service.assignTripToAgency(tripId, travelAgencyId);
+	}
+	
 }

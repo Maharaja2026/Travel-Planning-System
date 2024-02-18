@@ -25,9 +25,9 @@ public class ExpenseController
 	ExpenseService service;
 	
 	@PostMapping
-	public ResponseEntity<ResponseStructure<Expense>> saveExpense(@RequestParam int tripId,@RequestBody Expense expense)
+	public ResponseEntity<ResponseStructure<Expense>> saveExpense(@RequestBody Expense expense)
 	{
-		return service.saveExpense(tripId, expense);
+		return service.saveExpense(expense);
 	}
 	
 	@GetMapping

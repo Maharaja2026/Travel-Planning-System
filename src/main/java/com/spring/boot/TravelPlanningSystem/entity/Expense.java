@@ -25,7 +25,5 @@ public class Expense
 	private String description;
 	private double amount;
 	private LocalDate expenseDate;
-	
-	@ManyToOne(cascade = CascadeType.ALL)
-	private Trip trip;
+
 }

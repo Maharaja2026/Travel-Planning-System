@@ -1,6 +1,5 @@
 package com.spring.boot.TravelPlanningSystem.service;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,7 +10,8 @@ import org.springframework.stereotype.Service;
 import com.spring.boot.TravelPlanningSystem.dao.DestinationReviewDao;
 import com.spring.boot.TravelPlanningSystem.dao.TripDao;
 import com.spring.boot.TravelPlanningSystem.entity.DestinationReview;
-import com.spring.boot.TravelPlanningSystem.entity.Trip;
+import com.spring.boot.TravelPlanningSystem.exception.DestinationReviewNotFound;
+import com.spring.boot.TravelPlanningSystem.exception.DestinationReviewsNotFound;
 import com.spring.boot.TravelPlanningSystem.util.ResponseStructure;
 
 @Service
@@ -23,24 +23,13 @@ public class DestinationReviewService
 	@Autowired
 	TripDao tdao;
 
-	public ResponseEntity<ResponseStructure<DestinationReview>> saveDestinationReview(int tripId,DestinationReview destinationReview)
+	public ResponseEntity<ResponseStructure<DestinationReview>> saveDestinationReview(DestinationReview destinationReview)
 	{
-		Trip trip = tdao.findTrip(tripId);
-		if(trip != null)
-		{
-			destinationReview.setTrip(trip);
-			List<DestinationReview> tripReviews = findAllReviewsByTrip(tripId);
-			trip.getDestinationReviews().add(destinationReview);
-			trip.setDestinationReviews(tripReviews);
-			tdao.updateTrip(trip, trip.getTripId());
-			destinationReview.setTrip(trip);
-			ResponseStructure<DestinationReview> structure = new ResponseStructure<>();
-			structure.setMessage("DestinationReview save success..!");
-			structure.setStatus(HttpStatus.CREATED.value());
-			structure.setData(dao.saveDestinationReview(destinationReview));
-			return new ResponseEntity<ResponseStructure<DestinationReview>>(structure,HttpStatus.CREATED);
-		}
-		return null;
+		ResponseStructure<DestinationReview> structure = new ResponseStructure<>();
+	    structure.setMessage("Destination Review save success..!");
+	    structure.setStatus(HttpStatus.CREATED.value());
+	    structure.setData(dao.saveDestinationReview(destinationReview));
+	    return new ResponseEntity<ResponseStructure<DestinationReview>>(structure,HttpStatus.CREATED);
 		
 	}
 	
@@ -55,7 +44,7 @@ public class DestinationReviewService
 			structure.setData(destinationReview);
 			return new ResponseEntity<ResponseStructure<DestinationReview>>(structure,HttpStatus.FOUND);
 		}
-		return null;	
+		throw new DestinationReviewNotFound("DestinationReview does not Found");	
 	}
 	
 	public ResponseEntity<ResponseStructure<DestinationReview>> deleteDestinationReview(int destinationReviewId)
@@ -69,7 +58,7 @@ public class DestinationReviewService
 			structure.setData(dao.deleteDestinationReview(destinationReview.getDestinationReviewId()));
 			return new ResponseEntity<ResponseStructure<DestinationReview>>(structure,HttpStatus.OK);
 		}
-		return null;
+		throw new DestinationReviewNotFound("DestinationReview does not Found");
 	}
 	
 	public ResponseEntity<ResponseStructure<DestinationReview>> updateDestinationReview(DestinationReview destinationReview,int destinationReviewId)
@@ -83,30 +72,21 @@ public class DestinationReviewService
 			structure.setStatus(HttpStatus.OK.value());
 			return new ResponseEntity<ResponseStructure<DestinationReview>>(structure,HttpStatus.OK);
 		}
-		return null;
+		throw new DestinationReviewNotFound("DestinationReview does not Found");
 	}
 	
 	public ResponseEntity<ResponseStructure<List<DestinationReview>>> findAllDestinationReviews()
 	{
 		List<DestinationReview> destinationReviews = dao.findAllDestinationReviews();
-		ResponseStructure<List<DestinationReview>> structure = new ResponseStructure<>();
-		structure.setMessage("DestinationReviews Found..!");
-		structure.setData(destinationReviews);
-		structure.setStatus(HttpStatus.FOUND.value());
-		return new ResponseEntity<ResponseStructure<List<DestinationReview>>>(structure,HttpStatus.FOUND);
+		if(destinationReviews.isEmpty())
+		{
+			ResponseStructure<List<DestinationReview>> structure = new ResponseStructure<>();
+			structure.setMessage("DestinationReviews Found..!");
+			structure.setData(destinationReviews);
+			structure.setStatus(HttpStatus.FOUND.value());
+			return new ResponseEntity<ResponseStructure<List<DestinationReview>>>(structure,HttpStatus.FOUND);
+		}
+		throw new DestinationReviewsNotFound("DestinationReviews does not Found");
 	}
 	
-	public List<DestinationReview> findAllReviewsByTrip(int tripId)
-	{
-		List<DestinationReview> allReviews = dao.findAllDestinationReviews();
-		List<DestinationReview> tripReviews = new ArrayList<>();
-		for(DestinationReview review : allReviews)
-		{
-			if(review.getTrip().equals(tdao.findTrip(tripId)))
-			{
-				tripReviews.add(review);
-			}
-		}
-		return tripReviews;
-	}
 }

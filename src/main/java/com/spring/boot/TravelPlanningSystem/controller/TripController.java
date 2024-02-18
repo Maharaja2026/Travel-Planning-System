@@ -25,9 +25,9 @@ public class TripController
 	TripService service;
 
 	@PostMapping
-	public ResponseEntity<ResponseStructure<Trip>> saveTrip(@RequestParam int userId,@RequestBody Trip trip,@RequestParam int transportValue,@RequestParam int value)
+	public ResponseEntity<ResponseStructure<Trip>> saveTrip(@RequestBody Trip trip)
 	{
-		return service.saveTrip(userId, trip, transportValue, value);
+		return service.saveTrip(trip);
 	}
 	
 	@GetMapping
@@ -52,5 +52,35 @@ public class TripController
 	public ResponseEntity<ResponseStructure<List<Trip>>> findAllTrips()
 	{
 		return service.findAllTrips();
+	}
+	
+	@PutMapping("assignItem")
+	public ResponseEntity<ResponseStructure<Trip>> assignItineraryItemToTrip(@RequestParam int itineraryItemId,@RequestParam int tripId)
+	{
+		return service.assignItineraryItemsToTrip(itineraryItemId, tripId);
+	}
+	
+	@PutMapping("assignExpense")
+	public ResponseEntity<ResponseStructure<Trip>> assignExpenseToTrip(@RequestParam int expenseId,@RequestParam int tripId)
+	{
+		return service.assignExpenseToTrip(expenseId, tripId);
+	}
+	
+	@PutMapping("assignReview")
+	public ResponseEntity<ResponseStructure<Trip>> assignReviewToTrip(@RequestParam int destinationReviewId,@RequestParam int tripId)
+	{
+		return service.assignReviewToTrip(destinationReviewId, tripId);
+	}
+	
+	@PutMapping("assignAccommodation")
+	public ResponseEntity<ResponseStructure<Trip>> assignAccommodationToTrip(@RequestParam int value,@RequestParam int tripId)
+	{
+		return service.assignAccommodationType(value, tripId);
+	}
+	
+	@PutMapping("assignTransportation")
+	public ResponseEntity<ResponseStructure<Trip>> assignTransportationToTrip(@RequestParam int value,@RequestParam int tripId)
+	{
+		return service.assignTransportationMode(value, tripId);
 	}
 }

@@ -1,6 +1,5 @@
 package com.spring.boot.TravelPlanningSystem.service;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,7 +10,8 @@ import org.springframework.stereotype.Service;
 import com.spring.boot.TravelPlanningSystem.dao.ExpenseDao;
 import com.spring.boot.TravelPlanningSystem.dao.TripDao;
 import com.spring.boot.TravelPlanningSystem.entity.Expense;
-import com.spring.boot.TravelPlanningSystem.entity.Trip;
+import com.spring.boot.TravelPlanningSystem.exception.ExpenseNotFound;
+import com.spring.boot.TravelPlanningSystem.exception.ExpensesNotFound;
 import com.spring.boot.TravelPlanningSystem.util.ResponseStructure;
 
 @Service
@@ -23,23 +23,13 @@ public class ExpenseService
 	@Autowired
 	TripDao tdao;
 
-	public ResponseEntity<ResponseStructure<Expense>> saveExpense(int tripId,Expense expense)
+	public ResponseEntity<ResponseStructure<Expense>> saveExpense(Expense expense)
 	{
-		Trip trip = tdao.findTrip(tripId);
-		if(trip != null)
-		{
-			List<Expense> tripExpenses = findAllExpensesByTrip(tripId);
-			trip.getExpenses().add(expense);
-			trip.setExpenses(tripExpenses);
-			tdao.updateTrip(trip, trip.getTripId());
-			expense.setTrip(trip);
-			ResponseStructure<Expense> structure = new ResponseStructure<>();
-			structure.setMessage("Expense save success..!");
-			structure.setStatus(HttpStatus.CREATED.value());
-			structure.setData(dao.saveExpense(expense));
-			return new ResponseEntity<ResponseStructure<Expense>>(structure,HttpStatus.CREATED);
-		}
-		return null;
+		ResponseStructure<Expense> structure = new ResponseStructure<>();
+	    structure.setMessage("User save success..!");
+	    structure.setStatus(HttpStatus.CREATED.value());
+	    structure.setData(dao.saveExpense(expense));
+	    return new ResponseEntity<ResponseStructure<Expense>>(structure,HttpStatus.CREATED);
 	}
 	
 	public ResponseEntity<ResponseStructure<Expense>> findExpense(int expenseId)
@@ -53,7 +43,7 @@ public class ExpenseService
 			structure.setData(expense);
 			return new ResponseEntity<ResponseStructure<Expense>>(structure,HttpStatus.FOUND);
 		}
-		return null;
+		throw new ExpenseNotFound("Expense does not exist");
 	}
 	
 	public ResponseEntity<ResponseStructure<Expense>> deleteExpense(int expenseId)
@@ -67,7 +57,7 @@ public class ExpenseService
 			structure.setData(dao.deleteExpense(expense.getExpenseId()));
 			return new ResponseEntity<ResponseStructure<Expense>>(structure,HttpStatus.OK);
 		}
-		return null;
+		throw new ExpenseNotFound("Expense does not exist");
 	}
 	
 	public ResponseEntity<ResponseStructure<Expense>> updateExpense(Expense expense,int expenseId)
@@ -81,43 +71,22 @@ public class ExpenseService
 			structure.setData(dao.updateExpense(expense,exiExpense.getExpenseId()));
 			return new ResponseEntity<ResponseStructure<Expense>>(structure,HttpStatus.OK);
 		}
-		return null;
+		throw new ExpenseNotFound("Expense does not exist");
 	}
 	
 	public ResponseEntity<ResponseStructure<List<Expense>>> findAllExpenses()
 	{
 		List<Expense> expenses = dao.findAllExpenses();
-		ResponseStructure<List<Expense>> structure = new ResponseStructure<>(); 
-		structure.setMessage("Expenses found..!");
-		structure.setStatus(HttpStatus.FOUND.value());
-		structure.setData(expenses);
-		return new ResponseEntity<ResponseStructure<List<Expense>>>(structure,HttpStatus.OK);
-	}
-	
-	//find all expenses by trip
-	public List<Expense> findAllExpensesByTrip(int tripId)
-	{
-		List<Expense> allExpenses = dao.findAllExpenses();
-		List<Expense> tripExpenses = new ArrayList<>();
-		for(Expense expense : allExpenses)
+		if(expenses.isEmpty())
 		{
-			if(expense.getTrip() != null)
-			{
-				if(expense.getTrip().equals(tdao.findTrip(tripId)))
-				{
-					tripExpenses.add(expense);
-				}
-			}
-			else
-				return null;
+			ResponseStructure<List<Expense>> structure = new ResponseStructure<>(); 
+			structure.setMessage("Expenses found..!");
+			structure.setStatus(HttpStatus.FOUND.value());
+			structure.setData(expenses);
+			return new ResponseEntity<ResponseStructure<List<Expense>>>(structure,HttpStatus.OK);
 		}
-		return tripExpenses;
+		throw new ExpensesNotFound("Expenses does not exist");
 	}
-	
-	
-	
-	
-	
 	
 	
 }

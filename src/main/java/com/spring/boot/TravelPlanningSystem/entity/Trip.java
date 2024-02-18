@@ -1,3 +1,4 @@
+
 package com.spring.boot.TravelPlanningSystem.entity;
 
 import java.time.LocalDate;
@@ -29,9 +30,6 @@ public class Trip
 	private LocalDate endDate;
 	private TransportationMode transportationMode;
 	private AccommodationType accommodationType;
-	
-	@ManyToOne(cascade = CascadeType.ALL)
-	private User user;
 	
 	@OneToMany(cascade = CascadeType.ALL)
 	private List<ItineraryItem> itineraryItems;

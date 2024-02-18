@@ -1,6 +1,5 @@
 package com.spring.boot.TravelPlanningSystem.service;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,12 +7,21 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import com.spring.boot.TravelPlanningSystem.dao.DestinationReviewDao;
+import com.spring.boot.TravelPlanningSystem.dao.ExpenseDao;
+import com.spring.boot.TravelPlanningSystem.dao.ItineraryItemDao;
 import com.spring.boot.TravelPlanningSystem.dao.TripDao;
-import com.spring.boot.TravelPlanningSystem.dao.UserDao;
 import com.spring.boot.TravelPlanningSystem.entity.AccommodationType;
+import com.spring.boot.TravelPlanningSystem.entity.DestinationReview;
+import com.spring.boot.TravelPlanningSystem.entity.Expense;
+import com.spring.boot.TravelPlanningSystem.entity.ItineraryItem;
 import com.spring.boot.TravelPlanningSystem.entity.TransportationMode;
 import com.spring.boot.TravelPlanningSystem.entity.Trip;
-import com.spring.boot.TravelPlanningSystem.entity.User;
+import com.spring.boot.TravelPlanningSystem.exception.DestinationReviewNotFound;
+import com.spring.boot.TravelPlanningSystem.exception.ExpenseNotFound;
+import com.spring.boot.TravelPlanningSystem.exception.ItineraryItemNotFound;
+import com.spring.boot.TravelPlanningSystem.exception.TripNotFound;
+import com.spring.boot.TravelPlanningSystem.exception.TripsNotFound;
 import com.spring.boot.TravelPlanningSystem.util.ResponseStructure;
 
 @Service
@@ -23,27 +31,22 @@ public class TripService
 	TripDao dao;
 	
 	@Autowired
-	UserDao udao;
+	ItineraryItemDao idao;
+	
+	@Autowired
+	ExpenseDao edao;
+	
+	@Autowired
+	DestinationReviewDao ddao;
 
 	//save trip
-	public ResponseEntity<ResponseStructure<Trip>> saveTrip(int userId,Trip trip,int transportValue,int value)
+	public ResponseEntity<ResponseStructure<Trip>> saveTrip(Trip trip)
 	{
-		User user = udao.findUser(userId);
-		if(user != null)
-		{
-			trip.setUser(user);
-			List<Trip> userTrips = findAllTripsByUser(user.getUserId()); 
-			user.setTrips(userTrips);
-			udao.updateUser(user, user.getUserId());
-			trip.setTransportationMode(saveTransportationMode(transportValue));
-		    trip.setAccommodationType(saveAccomaodationType(value));
-			ResponseStructure<Trip> structure = new ResponseStructure<>();
-			structure.setMessage("Trip save success..!");
-			structure.setStatus(HttpStatus.CREATED.value());
-			structure.setData(dao.saveTrip(trip));
-			return new ResponseEntity<ResponseStructure<Trip>>(structure,HttpStatus.CREATED);
-		}
-		return null;	
+		ResponseStructure<Trip> structure = new ResponseStructure<>();
+	    structure.setMessage("User save success..!");
+	    structure.setStatus(HttpStatus.CREATED.value());
+	    structure.setData(dao.saveTrip(trip));
+	    return new ResponseEntity<ResponseStructure<Trip>>(structure,HttpStatus.CREATED);			
 	}
 	
 	public ResponseEntity<ResponseStructure<Trip>> findTrip(int tripId)
@@ -57,7 +60,7 @@ public class TripService
 			structure.setData(trip);
 			return new ResponseEntity<ResponseStructure<Trip>>(structure,HttpStatus.FOUND);
 		}
-		return null;	
+		throw new TripNotFound("Trip does not Found");	
 	}
 	
 	public ResponseEntity<ResponseStructure<Trip>> deleteTrip(int tripId)
@@ -71,7 +74,7 @@ public class TripService
 			structure.setData(dao.deleteTrip(trip.getTripId()));
 			return new ResponseEntity<ResponseStructure<Trip>>(structure,HttpStatus.OK);
 		}
-		return null;
+		throw new TripNotFound("Trip does not Found");
 	}
 	
 	
@@ -86,71 +89,139 @@ public class TripService
 			structure.setData(dao.updateTrip(trip, trip.getTripId()));
 			return new ResponseEntity<ResponseStructure<Trip>>(structure,HttpStatus.OK);
 		}
-		return null;
+		throw new TripNotFound("Trip does not Found");
 	}
 	
 	//find all trips
 	public ResponseEntity<ResponseStructure<List<Trip>>> findAllTrips()
 	{
 		List<Trip> trips = dao.findAllTrips();
-		ResponseStructure<List<Trip>> structure = new ResponseStructure<>();
-		structure.setMessage("Trips found..!");
-		structure.setStatus(HttpStatus.FOUND.value());
-		structure.setData(trips);
-		return new ResponseEntity<ResponseStructure<List<Trip>>>(structure,HttpStatus.FOUND);
+		if(trips.isEmpty())
+		{
+			ResponseStructure<List<Trip>> structure = new ResponseStructure<>();
+			structure.setMessage("Trips found..!");
+			structure.setStatus(HttpStatus.FOUND.value());
+			structure.setData(trips);
+			return new ResponseEntity<ResponseStructure<List<Trip>>>(structure,HttpStatus.FOUND);
+		}
+		throw new TripsNotFound("Trips does not Found");
 	}
 	
-	//---------------------------------------------------------------
-	
-	//find all trips by user
-	public List<Trip> findAllTripsByUser(int userId)
+	//assign Itineraryitems to trip
+	public ResponseEntity<ResponseStructure<Trip>> assignItineraryItemsToTrip(int ItineraryItemId,int tripId)
 	{
-		List<Trip> allTrips = dao.findAllTrips();
-		List<Trip> userTrips = new ArrayList<>();
-		for(Trip trip : allTrips)
+		ItineraryItem itineraryItem = idao.findItineraryItem(ItineraryItemId);
+		Trip trip = dao.findTrip(tripId);
+		
+		if(itineraryItem != null)
 		{
-			if(trip.getUser() != null)
+			if(trip != null)
 			{
-				if(trip.getUser().equals(udao.findUser(userId)))
-					userTrips.add(trip);	
+				trip.getItineraryItems().add(itineraryItem);
+			    Trip updatedTrip = dao.updateTrip(trip, trip.getTripId());
+				ResponseStructure<Trip> structure = new ResponseStructure<>();
+				structure.setData(updatedTrip);
+				structure.setMessage("ItineraryItem assigned.!");
+				structure.setStatus(HttpStatus.OK.value());
+				return new ResponseEntity<ResponseStructure<Trip>>(structure,HttpStatus.OK);
 			}
-			else
-				return null;
+			throw new TripNotFound("Trip does not Found");
 		}
-		return userTrips;
-	}
+		throw new ItineraryItemNotFound("ItineraryItem does not Found");	
+	}	
 	
-	
-	//save AccommodationType
-	public AccommodationType saveAccomaodationType(int value)
+	//assign expense to trip
+	public ResponseEntity<ResponseStructure<Trip>> assignExpenseToTrip(int expenseId,int tripId)
 	{
-		AccommodationType accommodationType = null;
-		switch(value)
+		Expense expense = edao.findExpense(expenseId);
+		Trip trip = dao.findTrip(tripId);
+		
+		if(expense != null)
 		{
-		case 0 : accommodationType = AccommodationType.AIRBNB;break;
-		case 1 : accommodationType = AccommodationType.HOSTEL;break;
-		case 2 : accommodationType = AccommodationType.HOTEL;break;
-		default : //AccommodationType does not exist
+			if(trip != null)
+			{
+				trip.getExpenses().add(expense);
+			    Trip updatedTrip = dao.updateTrip(trip, trip.getTripId());
+				ResponseStructure<Trip> structure = new ResponseStructure<>();
+				structure.setData(updatedTrip);
+				structure.setMessage("Expense assigned.!");
+				structure.setStatus(HttpStatus.OK.value());
+				return new ResponseEntity<ResponseStructure<Trip>>(structure,HttpStatus.OK);
+			}
+			throw new TripNotFound("Trip does not Found");
 		}
-		return accommodationType;
-	}
+		throw new ExpenseNotFound("Expense does not exist");	
+	}	
 	
-	//save TransportationMode
-	public TransportationMode saveTransportationMode(int transportValue)
+	//assign destination review to trip
+	public ResponseEntity<ResponseStructure<Trip>> assignReviewToTrip(int destinationReviewId,int tripId)
 	{
-		TransportationMode transportationMode = null;
-	
-		switch(transportValue)
+		DestinationReview destinationReview = ddao.findDestinationReview(destinationReviewId);
+		Trip trip = dao.findTrip(tripId);
+		
+		if(destinationReview != null)
 		{
-		case 0 : transportationMode = TransportationMode.BUS;break;
-		case 1 : transportationMode = TransportationMode.CAR_RENTAL;break;
-		case 2 : transportationMode = TransportationMode.FLIGHT;break;
-		case 3 : transportationMode = TransportationMode.TRAIN;break;
-		default : //AccommodationType does not exist
+			if(trip != null)
+			{
+				trip.getDestinationReviews().add(destinationReview);
+			    Trip updatedTrip = dao.updateTrip(trip, trip.getTripId());
+				ResponseStructure<Trip> structure = new ResponseStructure<>();
+				structure.setData(updatedTrip);
+				structure.setMessage("Destination review assigned.!");
+				structure.setStatus(HttpStatus.OK.value());
+				return new ResponseEntity<ResponseStructure<Trip>>(structure,HttpStatus.OK);
+			}
+			throw new TripNotFound("Trip does not Found");
 		}
-		return transportationMode;
+		throw new DestinationReviewNotFound("DestinationReview does not Found");	
+	}	
+
+	
+	//assign accommodation type
+	public ResponseEntity<ResponseStructure<Trip>> assignAccommodationType(int value,int tripId)
+	{
+		Trip trip = dao.findTrip(tripId);
+		if(trip != null)
+		{
+			switch(value)
+			{
+			case 0 : trip.setAccommodationType(AccommodationType.AIRBNB);break;
+			case 1 : trip.setAccommodationType(AccommodationType.HOSTEL);break;
+			case 2 : trip.setAccommodationType(AccommodationType.HOTEL);break;
+			default : //AccommodationType does not exist
+			}
+			Trip updatedTrip = dao.updateTrip(trip, trip.getTripId());
+			ResponseStructure<Trip> structure = new ResponseStructure<>();
+			structure.setMessage("assign accommodation type success..!");
+			structure.setStatus(HttpStatus.OK.value());
+			structure.setData(updatedTrip);
+			return new ResponseEntity<ResponseStructure<Trip>>(structure,HttpStatus.OK);
+		}
+		throw new TripNotFound("Trip does not Found");
 	}
 	
-	
+	//assign transportaion mode
+	public ResponseEntity<ResponseStructure<Trip>> assignTransportationMode(int value,int tripId)
+	{
+		Trip trip = dao.findTrip(tripId);
+		if(trip != null)
+		{
+			switch(value)
+			{
+			case 0 : trip.setTransportationMode(TransportationMode.BUS);break;
+			case 1 : trip.setTransportationMode(TransportationMode.CAR_RENTAL);break;
+			case 2 : trip.setTransportationMode(TransportationMode.FLIGHT);break;
+			case 3 : trip.setTransportationMode(TransportationMode.TRAIN);break;
+			default : //transportationMode does not exist
+			}
+			Trip updatedTrip = dao.updateTrip(trip, trip.getTripId());
+			ResponseStructure<Trip> structure = new ResponseStructure<>();
+			structure.setMessage("assign transportation mode success..!");
+			structure.setStatus(HttpStatus.OK.value());
+			structure.setData(updatedTrip);
+			return new ResponseEntity<ResponseStructure<Trip>>(structure,HttpStatus.OK);
+		}
+		throw new TripNotFound("Trip does not Found");
+	}
 	
 }
